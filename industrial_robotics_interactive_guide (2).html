@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Industrial Robotics & Automation Master Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Google Fonts for Vintage Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,500&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Vintage Sepia Book (Parchment, Dark Ink, Faded Crimson, Muted Olive, Aged Blue) -->
+    
+    <!-- Application Structure Plan: The application retains the 6-pillar educational structure but is visually restructured to resemble a classic textbook or manuscript. 
+    The layout uses a central "book page" container over a dark leather-like background. The left sidebar acts as the "Table of Contents" using Roman numerals, and the right side acts as the active chapter. 
+    Interactivity is preserved (tabs, calculators, toggles) but styled to look like printed forms, index cards, and mechanical diagrams, creating an immersive, distraction-free reading and learning experience. -->
+    
+    <!-- Visualization & Content Choices: 
+    1. Fundamentals: Hover-reveal index cards (mimicking classic study cards).
+    2. Hardware: Tabbed ledger-style tables and a Radar Chart with muted, ink-like colors.
+    3. Intelligence: Indented, classic numbered lists with typographic ornaments.
+    4. Applied Math (Trajectory): Goal: Change/Process -> Method: Interactive Line Chart (Chart.js) + JS Calculator styled like an engineering ledger. The chart mimics a hand-drawn ink plot.
+    5. Programming/CIM: Side-by-side parchment blocks.
+    6. Cobots: A vintage switch toggle (mimicking old mechanical switches) to compare paradigms.
+    Libraries: Tailwind, Chart.js. No SVG or Mermaid used. Emojis replaced with classic unicode symbols (❖, ☙, ⚙). -->
+    
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        /* Vintage Book Custom CSS */
+        :root {
+            --ink: #2b1f18;
+            --ink-light: #4a3b32;
+            --parchment: #f4eadd;
+            --parchment-dark: #e8dcc4;
+            --leather: #1f140f;
+            --accent-red: #8a3a3a;
+            --accent-green: #4a5d23;
+            --accent-blue: #3b596d;
+        }
+
+        body {
+            background-color: var(--leather);
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAIklEQVQIW2NkQAKrVq36zwjjgzhhYWGMYAEYB8RmROaABADeOQ8CXl/xfgAAAABJRU5ErkJggg=='); /* Subtle texture */
+            color: var(--ink);
+            font-family: 'Lora', serif;
+        }
+
+        h1, h2, h3, h4, h5, .display-font {
+            font-family: 'Playfair Display', serif;
+            color: var(--ink);
+        }
+
+        .book-container {
+            background-color: var(--parchment);
+            box-shadow: inset 0 0 60px rgba(139, 90, 43, 0.15), 0 15px 35px rgba(0,0,0,0.6);
+            border: 1px solid #d3c4a9;
+        }
+
+        .vintage-border {
+            border: 2px solid var(--ink);
+            padding: 4px;
+            position: relative;
+        }
+        .vintage-border::before {
+            content: '';
+            position: absolute;
+            top: 2px; left: 2px; right: 2px; bottom: 2px;
+            border: 1px solid var(--ink);
+            pointer-events: none;
+        }
+
+        .vintage-hr {
+            border: 0;
+            height: 1px;
+            background: var(--ink);
+            background-image: linear-gradient(to right, transparent, var(--ink), transparent);
+            margin: 2rem 0;
+        }
+
+        .nav-item {
+            transition: all 0.2s ease-in-out;
+            border-bottom: 1px dotted transparent;
+        }
+        .nav-item:hover {
+            border-bottom: 1px dotted var(--ink-light);
+        }
+        .nav-item.active {
+            font-weight: 700;
+            font-style: italic;
+            color: var(--accent-red);
+        }
+        .nav-item.active::before {
+            content: '☙ ';
+            color: var(--accent-red);
+        }
+
+        .section-content {
+            display: none;
+            animation: fadeIn 0.6s ease-in-out;
+        }
+        .section-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Chart Containers */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 40vh;
+            max-height: 400px;
+        }
+
+        /* Flashcards styling */
+        .flip-card {
+            perspective: 1000px;
+            height: 180px;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+        }
+        .flip-card:hover .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            background-color: var(--parchment-dark);
+            border: 1px solid #c2b294;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+        .flip-card-back {
+            transform: rotateY(180deg);
+            background-color: var(--ink);
+            color: var(--parchment);
+            border-color: var(--ink);
+        }
+
+        /* Tabs */
+        .tab-btn {
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab-btn.active-tab {
+            border-bottom: 2px solid var(--accent-red);
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        /* Inputs for Ledger */
+        input[type="number"] {
+            background-color: transparent;
+            border: none;
+            border-bottom: 1px dashed var(--ink);
+            color: var(--ink);
+            font-family: 'Lora', serif;
+            text-align: center;
+        }
+        input[type="number"]:focus {
+            outline: none;
+            border-bottom: 2px solid var(--accent-red);
+        }
+
+        .ornament {
+            font-size: 1.5rem;
+            color: var(--accent-red);
+            text-align: center;
+            margin: 1rem 0;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-2 md:p-8 flex justify-center items-start">
+
+    <!-- The Book -->
+    <div class="book-container w-full max-w-6xl flex flex-col md:flex-row rounded-sm min-h-[90vh]">
+        
+        <!-- Table of Contents (Left Page / Sidebar) -->
+        <nav class="w-full md:w-1/4 md:border-r border-[#c2b294] flex-shrink-0 p-8 flex flex-col">
+            <div class="text-center mb-8 pb-6 border-b-2 border-double border-[#8b5a2b]">
+                <div class="text-2xl mb-2 text-[#8a3a3a]">⚙</div>
+                <h1 class="text-2xl font-black uppercase tracking-widest leading-snug">Industrial<br>Robotics</h1>
+                <p class="text-sm italic text-[#4a3b32] mt-2">A Comprehensive Guide</p>
+            </div>
+            
+            <h2 class="display-font text-lg font-bold uppercase tracking-widest mb-4 text-center">Index</h2>
+            
+            <ul class="space-y-4 text-[15px] flex-grow">
+                <li><button onclick="navigate('fundamentals')" id="nav-fundamentals" class="nav-item active w-full text-left">Chap. I: Fundamentals</button></li>
+                <li><button onclick="navigate('hardware')" id="nav-hardware" class="nav-item w-full text-left">Chap. II: Hardware & Anatomy</button></li>
+                <li><button onclick="navigate('intelligence')" id="nav-intelligence" class="nav-item w-full text-left">Chap. III: Sensing & Vision</button></li>
+                <li><button onclick="navigate('math')" id="nav-math" class="nav-item w-full text-left">Chap. IV: Applied Mathematics</button></li>
+                <li><button onclick="navigate('programming')" id="nav-programming" class="nav-item w-full text-left">Chap. V: Programming & CIM</button></li>
+                <li><button onclick="navigate('cobots')" id="nav-cobots" class="nav-item w-full text-left">Chap. VI: The Cobot Era</button></li>
+            </ul>
+            
+            <div class="text-center mt-8 pt-4 border-t border-dashed border-[#c2b294] text-xs text-[#4a3b32] italic">
+                Volume I.
+            </div>
+        </nav>
+
+        <!-- Chapter Content (Right Page) -->
+        <main class="flex-grow p-6 md:p-12 md:pl-16 w-full max-h-[90vh] overflow-y-auto">
+            
+            <!-- SECTION 1: Fundamentals -->
+            <section id="fundamentals" class="section-content active">
+                <header class="mb-10 text-center">
+                    <h2 class="text-4xl font-black uppercase tracking-wide mb-4">Chapter I.</h2>
+                    <h3 class="text-2xl italic text-[#4a3b32]">Fundamentals of Robotics</h3>
+                    <div class="ornament">❧</div>
+                    <p class="text-lg leading-relaxed text-left indent-8">
+                        This section introduces the foundational concepts of industrial robotics, outlining what defines a robot according to international standards, the philosophical laws governing their behavior, and the pragmatic rules for their deployment in the industrial workforce.
+                    </p>
+                </header>
+
+                <div class="vintage-border p-8 mb-10 bg-[#f8f1e5]">
+                    <div class="text-center mb-6">
+                        <h3 class="text-2xl font-bold uppercase tracking-widest">The Laws of Robotics</h3>
+                        <p class="text-sm italic text-[#4a3b32] mt-1">Hover over the tenets to study their dictates.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-5 border-t border-b border-[#8b5a2b] hover:bg-[#e8dcc4] transition-colors cursor-default">
+                            <span class="font-bold display-font text-lg block mb-2">I. The Law of Protection</span>
+                            A robot may not injure a human being or, through inaction, allow a human being to come to harm.
+                        </div>
+                        <div class="p-5 border-t border-b border-[#8b5a2b] hover:bg-[#e8dcc4] transition-colors cursor-default">
+                            <span class="font-bold display-font text-lg block mb-2">II. The Law of Obedience</span>
+                            A robot must obey orders given by humans except where such orders conflict with the First Law.
+                        </div>
+                        <div class="p-5 border-t border-b border-[#8b5a2b] hover:bg-[#e8dcc4] transition-colors cursor-default">
+                            <span class="font-bold display-font text-lg block mb-2">III. The Law of Preservation</span>
+                            A robot must protect its own existence as long as it does not conflict with the First or Second Laws.
+                        </div>
+                        <div class="p-5 border-t border-b border-[#8a3a3a] hover:bg-[#f0e4d4] transition-colors cursor-default">
+                            <span class="font-bold display-font text-[#8a3a3a] text-lg block mb-2">IV. The Socioeconomic Law</span>
+                            "A robot may take a human being's job, but it may not leave that person jobless."
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-2xl font-bold text-center mb-2">The "Four D's" of Automation</h3>
+                    <p class="text-center italic mb-8">Conditions necessitating mechanization.</p>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="flip-card">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front">
+                                    <span class="text-3xl mb-3 text-[#4a3b32]">❖</span>
+                                    <h4 class="text-xl font-bold display-font uppercase tracking-widest">Dirty</h4>
+                                </div>
+                                <div class="flip-card-back">
+                                    <p class="text-sm leading-relaxed">Environments filled with grease, dust, or toxic chemicals where human health is at risk.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flip-card">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front">
+                                    <span class="text-3xl mb-3 text-[#4a3b32]">❖</span>
+                                    <h4 class="text-xl font-bold display-font uppercase tracking-widest">Dull</h4>
+                                </div>
+                                <div class="flip-card-back">
+                                    <p class="text-sm leading-relaxed">Highly repetitive, monotonous work that leads to human fatigue and errors.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flip-card">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front">
+                                    <span class="text-3xl mb-3 text-[#4a3b32]">❖</span>
+                                    <h4 class="text-xl font-bold display-font uppercase tracking-widest">Dangerous</h4>
+                                </div>
+                                <div class="flip-card-back">
+                                    <p class="text-sm leading-relaxed">High-risk areas involving extreme heat, radiation, or heavy, unsafe lifting.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flip-card">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front">
+                                    <span class="text-3xl mb-3 text-[#4a3b32]">❖</span>
+                                    <h4 class="text-xl font-bold display-font uppercase tracking-widest">Difficult</h4>
+                                </div>
+                                <div class="flip-card-back">
+                                    <p class="text-sm leading-relaxed">Tasks requiring sub-millimeter precision or physical strength beyond human capabilities.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: Hardware -->
+            <section id="hardware" class="section-content">
+                <header class="mb-10 text-center">
+                    <h2 class="text-4xl font-black uppercase tracking-wide mb-4">Chapter II.</h2>
+                    <h3 class="text-2xl italic text-[#4a3b32]">Hardware: Anatomy & Tooling</h3>
+                    <div class="ornament">❧</div>
+                    <p class="text-lg leading-relaxed text-left indent-8">
+                        A mechanical worker's physical capabilities are defined by its kinematic configuration, its actuation system, and crucially, the tooling attached to its extremity (End-Effectors) that performs the actual labor.
+                    </p>
+                </header>
+
+                <div class="mb-12">
+                    <h3 class="text-2xl font-bold mb-6 text-center">Kinematic Configurations</h3>
+                    <div class="flex flex-col md:flex-row gap-6 border border-[#c2b294] p-2 bg-[#f8f1e5]">
+                        <div class="flex flex-row md:flex-col gap-2 overflow-x-auto md:w-1/3 flex-shrink-0 border-b md:border-b-0 md:border-r border-[#c2b294] pr-2">
+                            <button onclick="showConfig('cartesian')" id="tab-cartesian" class="tab-btn active-tab text-left px-3 py-2 uppercase text-sm tracking-wider hover:bg-[#e8dcc4]">I. Cartesian</button>
+                            <button onclick="showConfig('cylindrical')" id="tab-cylindrical" class="tab-btn text-left px-3 py-2 uppercase text-sm tracking-wider hover:bg-[#e8dcc4]">II. Cylindrical</button>
+                            <button onclick="showConfig('spherical')" id="tab-spherical" class="tab-btn text-left px-3 py-2 uppercase text-sm tracking-wider hover:bg-[#e8dcc4]">III. Spherical</button>
+                            <button onclick="showConfig('articulated')" id="tab-articulated" class="tab-btn text-left px-3 py-2 uppercase text-sm tracking-wider hover:bg-[#e8dcc4]">IV. Articulated</button>
+                            <button onclick="showConfig('scara')" id="tab-scara" class="tab-btn text-left px-3 py-2 uppercase text-sm tracking-wider hover:bg-[#e8dcc4]">V. SCARA</button>
+                        </div>
+                        <div class="md:w-2/3 p-4 min-h-[250px]">
+                            <div id="config-content" class="h-full flex flex-col justify-center">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="vintage-hr"></div>
+
+                <div class="mb-12">
+                    <h3 class="text-2xl font-bold mb-4 text-center">Actuation Systems (Drives)</h3>
+                    <p class="text-center italic mb-8">An analysis of the motive forces employed in robotics.</p>
+                    
+                    <div class="flex flex-col lg:flex-row items-center gap-8">
+                        <div class="w-full lg:w-1/2">
+                            <div class="chart-container">
+                                <canvas id="drivesChart"></canvas>
+                            </div>
+                            <p class="text-xs text-center mt-2 italic text-[#4a3b32]">Fig 1. Performance matrix of drive types.</p>
+                        </div>
+                        <div class="w-full lg:w-1/2 space-y-4">
+                            <div class="pb-3 border-b border-dashed border-[#c2b294]">
+                                <h4 class="font-bold display-font text-[#8a3a3a]">Hydraulic (Pressurized Fluid)</h4>
+                                <p class="text-sm mt-1 leading-relaxed">Highest power-to-weight ratio for heavy-duty lifting. Suffers from potential oil leaks, rendering it unsuitable for pristine environments.</p>
+                            </div>
+                            <div class="pb-3 border-b border-dashed border-[#c2b294]">
+                                <h4 class="font-bold display-font text-[#3b596d]">Pneumatic (Compressed Air)</h4>
+                                <p class="text-sm mt-1 leading-relaxed">Swift and clean for minor pick-and-place tasks. However, the compressibility of air renders it inaccurate for precise positioning.</p>
+                            </div>
+                            <div class="pb-3">
+                                <h4 class="font-bold display-font text-[#4a5d23]">Electric (Servo/Motors)</h4>
+                                <p class="text-sm mt-1 leading-relaxed">The modern standard. Offers excellent accuracy, high cleanliness, and sufficient speed for general assembly and intricate manipulation.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="vintage-hr"></div>
+
+                <div>
+                    <h3 class="text-2xl font-bold mb-6 text-center">End-Effectors (Tooling)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="border border-[#8b5a2b] p-6 bg-[#f8f1e5]">
+                            <h4 class="font-bold display-font uppercase tracking-widest mb-2 border-b border-[#c2b294] pb-2 text-center">Process Tools</h4>
+                            <p class="text-sm leading-relaxed text-justify">Directly alter the workpiece. Examples include spot-welding guns, arc-welding torches, spray-painting nozzles, and rotating spindles for milling or drilling operations.</p>
+                        </div>
+                        <div class="border border-[#8b5a2b] p-6 bg-[#f8f1e5]">
+                            <h4 class="font-bold display-font uppercase tracking-widest mb-2 border-b border-[#c2b294] pb-2 text-center">Mechanical Grippers</h4>
+                            <p class="text-sm leading-relaxed text-justify">Feature two or more articulating fingers actuated by the controller. Best utilized for rigid, geometrically consistent objects employing Grasp-Hold-Release logic.</p>
+                        </div>
+                        <div class="border border-[#8b5a2b] p-6 bg-[#f8f1e5]">
+                            <h4 class="font-bold display-font uppercase tracking-widest mb-2 border-b border-[#c2b294] pb-2 text-center">Vacuum Systems</h4>
+                            <p class="text-sm leading-relaxed text-justify">Employ suction cups and negative air pressure. Excellent for handling flat, delicate, or irregular objects like glass plates, parchment, or large metal sheets.</p>
+                        </div>
+                        <div class="border border-[#8b5a2b] p-6 bg-[#f8f1e5]">
+                            <h4 class="font-bold display-font uppercase tracking-widest mb-2 border-b border-[#c2b294] pb-2 text-center">Magnetic & Adhesive</h4>
+                            <p class="text-sm leading-relaxed text-justify">Utilize electromagnets for ferrous metals, or sticky substances for flexible fabrics. Adhesive methods suffer from loss of tack over repeated cycles.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: Intelligence -->
+            <section id="intelligence" class="section-content">
+                <header class="mb-10 text-center">
+                    <h2 class="text-4xl font-black uppercase tracking-wide mb-4">Chapter III.</h2>
+                    <h3 class="text-2xl italic text-[#4a3b32]">Sensing & Machine Vision</h3>
+                    <div class="ornament">❧</div>
+                    <p class="text-lg leading-relaxed text-left indent-8">
+                        To transition from a blind automaton to an intelligent system, a robot requires sensory feedback to perceive and interact accurately with its environment.
+                    </p>
+                </header>
+
+                <div class="vintage-border p-8 mb-10 bg-[#f8f1e5]">
+                    <h3 class="text-2xl font-bold mb-6 text-center display-font uppercase tracking-widest">Sensory Modalities</h3>
+                    
+                    <div class="space-y-6">
+                        <div class="flex gap-4">
+                            <div class="text-2xl mt-1 text-[#8a3a3a]">I.</div>
+                            <div>
+                                <h4 class="font-bold text-lg border-b border-[#c2b294] inline-block mb-1">Tactile & Strain Analysis</h4>
+                                <p class="text-sm leading-relaxed">Microswitches or piezoelectric (PVDF) materials output binary contact signals. Strain gauges measure force and torque via physical deformation within a classical Wheatstone bridge circuit.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="text-2xl mt-1 text-[#8a3a3a]">II.</div>
+                            <div>
+                                <h4 class="font-bold text-lg border-b border-[#c2b294] inline-block mb-1">Proximity & Displacement</h4>
+                                <p class="text-sm leading-relaxed">Eddy current, infrared, or ultrasonic sensors detect objects without physical contact. The LVDT (Linear Variable Differential Transformer) measures minute linear displacements using alternating current voltage differentials.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="text-2xl mt-1 text-[#8a3a3a]">III.</div>
+                            <div>
+                                <h4 class="font-bold text-lg border-b border-[#c2b294] inline-block mb-1">Optical Encoders</h4>
+                                <p class="text-sm leading-relaxed">Mechanisms attached directly to motor shafts to measure absolute or incremental rotational position, providing the vital closed-loop feedback necessary for precise motor control.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-8 border-t-2 border-b-2 border-double border-[#8b5a2b]">
+                    <h3 class="text-2xl font-bold mb-6 text-center display-font uppercase tracking-widest">The Machine Vision Pipeline</h3>
+                    
+                    <ol class="list-[upper-roman] list-inside space-y-6 text-lg font-bold">
+                        <li><span class="border-b border-dashed border-[#c2b294]">Acquisition & Digitization</span>
+                            <p class="text-sm font-normal mt-2 ml-6 leading-relaxed">Cameras capture the physical scene. Analog light signals are subsequently converted to digital data via a three-phase process: Sampling (creating pixels), Quantization (assigning gray levels), and Encoding.</p>
+                        </li>
+                        <li><span class="border-b border-dashed border-[#c2b294]">Processing & Enhancement</span>
+                            <p class="text-sm font-normal mt-2 ml-6 leading-relaxed">Windowing focuses the data to a region of interest. Thresholding converts grayscale imagery to stark binary to separate objects from the background. Edge detection mathematical algorithms find part boundaries.</p>
+                        </li>
+                        <li><span class="border-b border-dashed border-[#c2b294]">Extraction & Recognition</span>
+                            <p class="text-sm font-normal mt-2 ml-6 leading-relaxed">Calculating geometric properties such as area and perimeter, or utilizing Template Matching paradigms to identify specific objects and trigger appropriate robotic responses.</p>
+                        </li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- SECTION 4: Applied Math -->
+            <section id="math" class="section-content">
+                <header class="mb-10 text-center">
+                    <h2 class="text-4xl font-black uppercase tracking-wide mb-4">Chapter IV.</h2>
+                    <h3 class="text-2xl italic text-[#4a3b32]">Applied Mathematics</h3>
+                    <div class="ornament">❧</div>
+                    <p class="text-lg leading-relaxed text-left indent-8">
+                        Fluid mechanical motion relies upon rigorous mathematics. Herein, we examine the equations governing Trajectory Planning (Cubic Polynomials) to prevent mechanical jarring, and the spatial logic of Kinematics.
+                    </p>
+                </header>
+
+                <div class="vintage-border p-6 md:p-8 mb-10 bg-[#f8f1e5]">
+                    <h3 class="text-2xl font-bold mb-2 text-center display-font">Trajectory Planning Formulation</h3>
+                    <p class="text-center italic text-sm mb-6 pb-4 border-b border-[#c2b294]">The computation of a cubic polynomial path.</p>
+                    
+                    <p class="text-sm leading-relaxed mb-4 text-justify">
+                        To articulate a joint from rest at initial angle <em>θ₀</em> to a final angle <em>θf</em> over duration <em>tf</em> without mechanical jerking, the controller employs a cubic polynomial equation:
+                    </p>
+                    
+                    <div class="text-center font-bold font-serif text-lg my-4 p-4 border border-dashed border-[#8b5a2b] bg-[#f4eadd]">
+                        θ(t) = a₀ + a₁t + a₂t² + a₃t³
+                    </div>
+                    
+                    <p class="text-xs italic text-center mb-8">Wherein boundary conditions dictate zero starting and ending velocity, yielding coefficients: a₀ = θ₀ | a₁ = 0 | a₂ = 3/tf²(θf - θ₀) | a₃ = -2/tf³(θf - θ₀)</p>
+
+                    <!-- Ledger Calculator -->
+                    <div class="border-2 border-[#8b5a2b] p-1">
+                        <div class="border border-[#8b5a2b] p-6 bg-[#e8dcc4]">
+                            <h4 class="font-bold display-font uppercase tracking-widest mb-4 text-center border-b-2 border-double border-[#8b5a2b] pb-2">Computation Ledger</h4>
+                            
+                            <div class="flex flex-col md:flex-row gap-8">
+                                <div class="w-full md:w-1/3 space-y-4">
+                                    <div class="flex justify-between items-end">
+                                        <label class="text-sm font-bold uppercase">Initial Angle (θ₀):</label>
+                                        <input type="number" id="traj-start" value="15" class="w-16">
+                                    </div>
+                                    <div class="flex justify-between items-end">
+                                        <label class="text-sm font-bold uppercase">Final Angle (θf):</label>
+                                        <input type="number" id="traj-end" value="75" class="w-16">
+                                    </div>
+                                    <div class="flex justify-between items-end">
+                                        <label class="text-sm font-bold uppercase">Duration (tf sec):</label>
+                                        <input type="number" id="traj-time" value="3" class="w-16">
+                                    </div>
+                                    
+                                    <button onclick="calculateTrajectory()" class="mt-4 w-full bg-[#2b1f18] text-[#f4eadd] font-bold py-2 px-4 border-2 border-transparent hover:bg-transparent hover:text-[#2b1f18] hover:border-[#2b1f18] transition-all uppercase tracking-widest text-sm">
+                                        Plot Curve
+                                    </button>
+                                    
+                                    <div class="mt-4 p-2 border border-[#8b5a2b] bg-[#f8f1e5] text-center">
+                                        <span class="text-xs uppercase font-bold block mb-1">Derived Formula</span>
+                                        <div id="traj-equation" class="text-sm font-bold text-[#8a3a3a]">
+                                            θ(t) = 15 + 20t² - 4.44t³
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="w-full md:w-2/3">
+                                    <div class="chart-container" style="height: 250px;">
+                                        <canvas id="trajectoryChart"></canvas>
+                                    </div>
+                                    <p class="text-center text-xs italic mt-2">Observe the "S-curve": gentle acceleration yielding to a soft deceleration.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-bold mb-6 text-center display-font">Spatial Kinematics</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="font-bold uppercase tracking-widest mb-2 border-b border-[#c2b294] pb-2">I. Forward Kinematics</h4>
+                            <p class="text-sm leading-relaxed text-justify mb-2">Given known joint angles, this calculates the exact coordinate position of the end-effector. It utilizes <strong>Homogeneous Transformation Matrices (HTM)</strong>. The final position is the product of individual transformations.</p>
+                            <p class="text-sm leading-relaxed text-justify">Calculated via <strong>Denavit-Hartenberg (D-H) Parameters</strong>: Link Length (a), Link Twist (α), Joint Distance (d), and Joint Angle (θ).</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold uppercase tracking-widest mb-2 border-b border-[#c2b294] pb-2">II. Inverse Kinematics</h4>
+                            <p class="text-sm leading-relaxed text-justify mb-2">Given a desired spatial target, this computes the required joint angles to achieve it. This is a highly complex computational puzzle, often yielding <strong>multiple solutions</strong> (e.g., reaching a target via "elbow up" versus "elbow down") or occasionally no solution if the coordinate is unreachable.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 5: Programming & CIM -->
+            <section id="programming" class="section-content">
+                <header class="mb-10 text-center">
+                    <h2 class="text-4xl font-black uppercase tracking-wide mb-4">Chapter V.</h2>
+                    <h3 class="text-2xl italic text-[#4a3b32]">Programming & CIM Integration</h3>
+                    <div class="ornament">❧</div>
+                    <p class="text-lg leading-relaxed text-left indent-8">
+                        How does man instruct the machine? Programming methods have evolved from physical guidance to abstract languages. Furthermore, robots do not operate in a vacuum; they are integrated into Computer Integrated Manufacturing (CIM) systems.
+                    </p>
+                </header>
+
+                <div class="mb-12">
+                    <h3 class="text-2xl font-bold mb-6 text-center display-font">Robot Programming Methodologies</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="p-6 border-2 border-[#8b5a2b] bg-[#f8f1e5] text-center">
+                            <h4 class="font-bold uppercase tracking-widest mb-2 border-b border-[#c2b294] pb-2">Powered Lead-Through</h4>
+                            <p class="text-sm leading-relaxed mb-4">Utilizes a "Teach Pendant" to jog the robot arm via joint motors. The operator records points in memory to be played back. Limited mostly to point-to-point tasks.</p>
+                            <span class="text-xs font-bold text-[#8a3a3a] italic">Ideal for: Pick & Place, Spot Welding</span>
+                        </div>
+                        <div class="p-6 border-2 border-[#8b5a2b] bg-[#f8f1e5] text-center">
+                            <h4 class="font-bold uppercase tracking-widest mb-2 border-b border-[#c2b294] pb-2">Manual Lead-Through</h4>
+                            <p class="text-sm leading-relaxed mb-4">The programmer physically grasps the apparatus and moves it smoothly through the desired path. The controller records continuous path points rapidly.</p>
+                            <span class="text-xs font-bold text-[#8a3a3a] italic">Ideal for: Spray Painting, Arc Welding</span>
+                        </div>
+                        <div class="p-6 border-2 border-[#8b5a2b] bg-[#f8f1e5] text-center">
+                            <h4 class="font-bold uppercase tracking-widest mb-2 border-b border-[#c2b294] pb-2">Textual / Offline</h4>
+                            <p class="text-sm leading-relaxed mb-4">Authoring logic in languages (VAL, AML). Allows for complex sensor integration and branching. Can be authored offline without halting factory production.</p>
+                            <span class="text-xs font-bold text-[#8a3a3a] italic">Ideal for: Complex Logic, Assembly</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="vintage-hr"></div>
+
+                <div>
+                    <h3 class="text-2xl font-bold mb-4 text-center display-font">Computer Integrated Manufacturing</h3>
+                    <p class="text-center italic mb-8">The unification of the manufacturing enterprise.</p>
+                    
+                    <p class="text-sm leading-relaxed text-justify mb-6">
+                        CIM implies organizing the entire manufacturing endeavor—design, analysis, planning, purchasing, and factory floor operations—into a singular, cohesive computer-automated system.
+                    </p>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <div class="border border-[#c2b294] p-4 text-center bg-[#f8f1e5]">
+                            <span class="block font-bold uppercase tracking-widest mb-1 text-sm">CAD / CAM</span>
+                            <span class="text-xs italic text-[#4a3b32]">Design & Planning</span>
+                        </div>
+                        <div class="border border-[#c2b294] p-4 text-center bg-[#f8f1e5]">
+                            <span class="block font-bold uppercase tracking-widest mb-1 text-sm">CNC & Robots</span>
+                            <span class="text-xs italic text-[#4a3b32]">Execution on Floor</span>
+                        </div>
+                        <div class="border border-[#c2b294] p-4 text-center bg-[#f8f1e5]">
+                            <span class="block font-bold uppercase tracking-widest mb-1 text-sm">AS/RS & AGV</span>
+                            <span class="text-xs italic text-[#4a3b32]">Material Handling</span>
+                        </div>
+                        <div class="border border-[#c2b294] p-4 text-center bg-[#f8f1e5]">
+                            <span class="block font-bold uppercase tracking-widest mb-1 text-sm">LAN Databases</span>
+                            <span class="text-xs italic text-[#4a3b32]">Information Control</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 6: Cobots -->
+            <section id="cobots" class="section-content">
+                <header class="mb-10 text-center">
+                    <h2 class="text-4xl font-black uppercase tracking-wide mb-4">Chapter VI.</h2>
+                    <h3 class="text-2xl italic text-[#4a3b32]">The Cobot Era: A Paradigm Shift</h3>
+                    <div class="ornament">❧</div>
+                    <p class="text-lg leading-relaxed text-left indent-8">
+                        For decades, industrial robots have been massive, dangerous machines caged away from human workers. Collaborative Robots (Cobots) represent a fundamental shift in automation philosophy, designed to safely share workspaces and cooperate directly with human labor.
+                    </p>
+                </header>
+
+                <div class="flex flex-col mb-10">
+                    <div class="flex justify-center mb-10">
+                        <div class="inline-flex border-2 border-[#8b5a2b] p-1 bg-[#e8dcc4]">
+                            <button onclick="switchRobotView('traditional')" id="view-traditional" class="px-6 py-2 uppercase tracking-widest text-xs font-bold transition-all bg-[#2b1f18] text-[#f4eadd]">Traditional Industrial</button>
+                            <button onclick="switchRobotView('cobot')" id="view-cobot" class="px-6 py-2 uppercase tracking-widest text-xs font-bold transition-all text-[#2b1f18] hover:bg-[#d3c4a9]">Collaborative (Cobot)</button>
+                        </div>
+                    </div>
+
+                    <div id="robot-comparison-container" class="vintage-border p-8 bg-[#f8f1e5]">
+                        <!-- Traditional View -->
+                        <div id="traditional-view" class="flex flex-col md:flex-row gap-8 items-center animate-[fadeIn_0.4s_ease-in-out]">
+                            <div class="w-full md:w-1/3 flex justify-center">
+                                <div class="w-32 h-32 rounded-full border-4 border-double border-[#2b1f18] flex items-center justify-center text-4xl bg-[#e8dcc4]">
+                                    ⚙
+                                </div>
+                            </div>
+                            <div class="w-full md:w-2/3">
+                                <h3 class="text-2xl font-bold display-font uppercase tracking-widest mb-4 border-b border-[#c2b294] pb-2">The Traditional Automaton</h3>
+                                <p class="text-sm italic mb-6 leading-relaxed">Designed for raw power, blistering speed, and mass production. They must operate in complete physical isolation from human workers.</p>
+                                <ul class="space-y-4 text-sm">
+                                    <li class="flex items-start gap-3"><span class="text-[#8a3a3a] font-bold">X</span> <span class="leading-relaxed"><strong>Workspace:</strong> Strictly caged and physically isolated.</span></li>
+                                    <li class="flex items-start gap-3"><span class="text-[#8a3a3a] font-bold">X</span> <span class="leading-relaxed"><strong>Safety:</strong> Requires external guarding and laser scanners.</span></li>
+                                    <li class="flex items-start gap-3"><span class="text-[#8a3a3a] font-bold">X</span> <span class="leading-relaxed"><strong>Deployment:</strong> Complex, fixed location, skilled integrators needed.</span></li>
+                                    <li class="flex items-start gap-3"><span class="text-[#8b5a2b] font-bold">~</span> <span class="leading-relaxed"><strong>Programming:</strong> Advanced textual coding required (e.g., C++, ROS).</span></li>
+                                    <li class="flex items-start gap-3"><span class="text-[#4a5d23] font-bold">V</span> <span class="leading-relaxed"><strong>Performance:</strong> Capable of massive payloads and blinding speeds.</span></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Cobot View -->
+                        <div id="cobot-view" class="flex flex-col md:flex-row gap-8 items-center hidden animate-[fadeIn_0.4s_ease-in-out]">
+                            <div class="w-full md:w-1/3 flex justify-center">
+                                <div class="w-32 h-32 rounded-full border-4 border-double border-[#3b596d] flex items-center justify-center text-4xl bg-[#e8dcc4] text-[#3b596d]">
+                                    🤝
+                                </div>
+                            </div>
+                            <div class="w-full md:w-2/3">
+                                <h3 class="text-2xl font-bold display-font text-[#3b596d] uppercase tracking-widest mb-4 border-b border-[#c2b294] pb-2">The Collaborative Robot</h3>
+                                <p class="text-sm italic mb-6 leading-relaxed">Designed to augment human labor. They utilize built-in force feedback to instantly stop upon encountering unexpected resistance, rendering cages obsolete.</p>
+                                <ul class="space-y-4 text-sm">
+                                    <li class="flex items-start gap-3"><span class="text-[#4a5d23] font-bold">V</span> <span class="leading-relaxed"><strong>Workspace:</strong> Shared freely with human employees on the floor.</span></li>
+                                    <li class="flex items-start gap-3"><span class="text-[#4a5d23] font-bold">V</span> <span class="leading-relaxed"><strong>Safety:</strong> Built-in force/torque sensors trigger immediate collision stops.</span></li>
+                                    <li class="flex items-start gap-3"><span class="text-[#4a5d23] font-bold">V</span> <span class="leading-relaxed"><strong>Deployment:</strong> Agile, plug-and-play, easily mounted on mobile carts.</span></li>
+                                    <li class="flex items-start gap-3"><span class="text-[#4a5d23] font-bold">V</span> <span class="leading-relaxed"><strong>Programming:</strong> Intuitive hand-guiding and simplified interfaces.</span></li>
+                                    <li class="flex items-start gap-3"><span class="text-[#8b5a2b] font-bold">~</span> <span class="leading-relaxed"><strong>Performance:</strong> Constrained to lower payloads and safety-limited speeds.</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 border border-dashed border-[#8b5a2b] bg-[#e8dcc4]">
+                    <h4 class="font-bold display-font uppercase tracking-widest mb-2 text-center text-[#8a3a3a]">Historical Case Study: The 2020 Pandemic</h4>
+                    <p class="text-sm leading-relaxed text-justify">Due to their agility and lack of safety caging requirements, cobots were rapidly deployed during the global crisis. They executed tasks such as disinfecting hospital wards via ultraviolet radiation, processing medical testing samples, and safely handling contaminated materials, vividly showcasing their flexibility in unstructured environments.</p>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        const state = {
+            activeSection: 'fundamentals',
+            activeConfig: 'cartesian',
+            drivesChartInstance: null,
+            trajectoryChartInstance: null
+        };
+
+        const configData = {
+            cartesian: {
+                title: "Cartesian (Gantry)",
+                joints: "3 Prismatic (3P)",
+                shape: "Rectangular Box",
+                pros: "High accuracy, high rigidity, easy to program coordinates.",
+                cons: "Large physical footprint, exposed sliding rails prone to debris.",
+                symbol: "I."
+            },
+            cylindrical: {
+                title: "Cylindrical",
+                joints: "1 Rotary, 2 Prismatic (R2P)",
+                shape: "Hollow Cylinder",
+                pros: "Excellent for reaching into deep cavities or pipes.",
+                cons: "Limited rotational reach compared to articulated arms.",
+                symbol: "II."
+            },
+            spherical: {
+                title: "Spherical (Polar)",
+                joints: "2 Rotary, 1 Prismatic (2RP)",
+                shape: "Hollow Sphere",
+                pros: "Large work envelope, easy to seal joints from environment.",
+                cons: "Complex coordinate math, lower accuracy at full extension.",
+                symbol: "III."
+            },
+            articulated: {
+                title: "Articulated",
+                joints: "3+ Rotary (3R)",
+                shape: "Partial Sphere",
+                pros: "Maximum flexibility, compact, mimics the human arm.",
+                cons: "Difficult to program, highly complex kinematics.",
+                symbol: "IV."
+            },
+            scara: {
+                title: "SCARA",
+                joints: "2 Rotary, 1 Prismatic (2R1P)",
+                shape: "Donut / Cylinder",
+                pros: "High speed, very rigid vertically (Z-axis). Industry standard for assembly.",
+                cons: "Limited primarily to planar/horizontal pick-and-place tasks.",
+                symbol: "V."
+            }
+        };
+
+        function navigate(sectionId) {
+            document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`nav-${sectionId}`).classList.add('active');
+            
+            state.activeSection = sectionId;
+
+            if (sectionId === 'hardware' && !state.drivesChartInstance) {
+                initDrivesChart();
+            }
+
+            if (sectionId === 'math' && !state.trajectoryChartInstance) {
+                calculateTrajectory(); 
+            }
+            
+            // Scroll right pane to top
+            document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showConfig(configId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active-tab');
+            });
+            
+            const activeBtn = document.getElementById(`tab-${configId}`);
+            activeBtn.classList.add('active-tab');
+
+            const data = configData[configId];
+            const contentDiv = document.getElementById('config-content');
+            
+            contentDiv.innerHTML = `
+                <div class="animate-[fadeIn_0.4s_ease-in-out]">
+                    <div class="flex items-center gap-3 mb-2 border-b border-dashed border-[#c2b294] pb-2">
+                        <span class="text-2xl font-bold display-font text-[#8a3a3a]">${data.symbol}</span>
+                        <h4 class="text-xl font-bold uppercase tracking-widest">${data.title}</h4>
+                    </div>
+                    <div class="mb-4 text-xs font-bold uppercase tracking-widest italic text-[#4a3b32]">
+                        Configuration: ${data.joints}
+                    </div>
+                    
+                    <div class="grid grid-cols-1 gap-4 mt-2">
+                        <div>
+                            <span class="text-xs uppercase tracking-widest font-bold block mb-1">Workspace Envelope:</span>
+                            <p class="font-medium italic">${data.shape}</p>
+                        </div>
+                        <div class="mt-2">
+                            <span class="text-xs text-[#4a5d23] uppercase tracking-widest font-bold block mb-1">Advantages</span>
+                            <p class="text-sm leading-relaxed">${data.pros}</p>
+                        </div>
+                        <div class="mt-2">
+                            <span class="text-xs text-[#8a3a3a] uppercase tracking-widest font-bold block mb-1">Limitations</span>
+                            <p class="text-sm leading-relaxed">${data.cons}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function initDrivesChart() {
+            const ctx = document.getElementById('drivesChart').getContext('2d');
+            
+            Chart.defaults.font.family = "'Lora', serif";
+            Chart.defaults.color = '#4a3b32';
+
+            state.drivesChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Power-to-Weight', 'Accuracy', 'Speed', 'Cleanliness'],
+                    datasets: [
+                        {
+                            label: 'Hydraulic',
+                            data: [5, 4, 3, 1],
+                            fill: true,
+                            backgroundColor: 'rgba(138, 58, 58, 0.2)', // Accent Red
+                            borderColor: '#8a3a3a',
+                            pointBackgroundColor: '#8a3a3a',
+                            pointBorderColor: '#f4eadd',
+                            pointHoverBackgroundColor: '#f4eadd',
+                            pointHoverBorderColor: '#8a3a3a'
+                        },
+                        {
+                            label: 'Pneumatic',
+                            data: [2, 2, 5, 4],
+                            fill: true,
+                            backgroundColor: 'rgba(59, 89, 109, 0.2)', // Accent Blue
+                            borderColor: '#3b596d',
+                            pointBackgroundColor: '#3b596d',
+                            pointBorderColor: '#f4eadd',
+                            pointHoverBackgroundColor: '#f4eadd',
+                            pointHoverBorderColor: '#3b596d'
+                        },
+                        {
+                            label: 'Electric',
+                            data: [4, 5, 4, 5],
+                            fill: true,
+                            backgroundColor: 'rgba(74, 93, 35, 0.2)', // Accent Green
+                            borderColor: '#4a5d23',
+                            pointBackgroundColor: '#4a5d23',
+                            pointBorderColor: '#f4eadd',
+                            pointHoverBackgroundColor: '#f4eadd',
+                            pointHoverBorderColor: '#4a5d23'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                font: { family: "'Lora', serif", style: 'italic' }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#2b1f18',
+                            titleFont: { family: "'Playfair Display', serif" },
+                            bodyFont: { family: "'Lora', serif" },
+                            callbacks: {
+                                label: function(context) {
+                                    const scaleDict = {1: 'Poor', 2: 'Below Avg', 3: 'Average', 4: 'Good', 5: 'Excellent'};
+                                    return `${context.dataset.label}: ${scaleDict[context.raw]}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(74, 59, 50, 0.2)' },
+                            grid: { color: 'rgba(74, 59, 50, 0.2)', borderDash: [5, 5] },
+                            pointLabels: {
+                                font: { size: 12, weight: 'bold', family: "'Playfair Display', serif" }
+                            },
+                            ticks: {
+                                display: false,
+                                min: 0, max: 5, stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function calculateTrajectory() {
+            const th0 = parseFloat(document.getElementById('traj-start').value) || 0;
+            const thf = parseFloat(document.getElementById('traj-end').value) || 0;
+            const tf = parseFloat(document.getElementById('traj-time').value) || 1;
+
+            if(tf <= 0) { alert("Time must be greater than 0"); return; }
+
+            // Coefficients per report derivations
+            const a0 = th0;
+            const a1 = 0;
+            const a2 = (3 / Math.pow(tf, 2)) * (thf - th0);
+            const a3 = (-2 / Math.pow(tf, 3)) * (thf - th0);
+
+            // Output equation string
+            const eqDiv = document.getElementById('traj-equation');
+            let eqStr = `θ(t) = ${a0.toFixed(2)}`;
+            if(a2 !== 0) eqStr += ` ${a2 >= 0 ? '+' : '-'} ${Math.abs(a2).toFixed(2)}t²`;
+            if(a3 !== 0) eqStr += ` ${a3 >= 0 ? '+' : '-'} ${Math.abs(a3).toFixed(2)}t³`;
+            eqDiv.textContent = eqStr;
+
+            // Generate plot data
+            const labels = [];
+            const dataPts = [];
+            const steps = 30; // Resolution
+            
+            for(let i=0; i<=steps; i++) {
+                const t = (i / steps) * tf;
+                labels.push(t.toFixed(1) + 's');
+                const position = a0 + a1*t + a2*Math.pow(t, 2) + a3*Math.pow(t, 3);
+                dataPts.push(position);
+            }
+
+            renderTrajectoryChart(labels, dataPts);
+        }
+
+        function renderTrajectoryChart(labels, dataPts) {
+            const ctx = document.getElementById('trajectoryChart').getContext('2d');
+            
+            if (state.trajectoryChartInstance) {
+                state.trajectoryChartInstance.destroy();
+            }
+
+            Chart.defaults.color = '#4a3b32';
+            Chart.defaults.font.family = "'Lora', serif";
+
+            state.trajectoryChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Joint Angle θ (degrees)',
+                        data: dataPts,
+                        borderColor: '#2b1f18', // Ink color
+                        backgroundColor: 'rgba(139, 90, 43, 0.1)', // Light sepia fill
+                        borderWidth: 2,
+                        borderDash: [5, 5], // Vintage dashed line look
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointBackgroundColor: '#8a3a3a',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: '#2b1f18',
+                            titleFont: { family: "'Playfair Display', serif" },
+                            bodyFont: { family: "'Lora', serif" },
+                            callbacks: {
+                                label: (ctx) => `Angle: ${ctx.parsed.y.toFixed(2)}°`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Time (seconds)', font: {style: 'italic'} },
+                            grid: { color: 'rgba(74, 59, 50, 0.1)' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Angle (degrees)', font: {style: 'italic'} },
+                            grid: { color: 'rgba(74, 59, 50, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function switchRobotView(view) {
+            const btnTrad = document.getElementById('view-traditional');
+            const btnCobot = document.getElementById('view-cobot');
+            const viewTrad = document.getElementById('traditional-view');
+            const viewCobot = document.getElementById('cobot-view');
+
+            if (view === 'traditional') {
+                btnTrad.classList.add('bg-[#2b1f18]', 'text-[#f4eadd]');
+                btnTrad.classList.remove('hover:bg-[#d3c4a9]', 'text-[#2b1f18]');
+                
+                btnCobot.classList.remove('bg-[#2b1f18]', 'text-[#f4eadd]');
+                btnCobot.classList.add('text-[#2b1f18]', 'hover:bg-[#d3c4a9]');
+
+                viewCobot.classList.add('hidden');
+                viewTrad.classList.remove('hidden');
+            } else {
+                btnCobot.classList.add('bg-[#2b1f18]', 'text-[#f4eadd]');
+                btnCobot.classList.remove('hover:bg-[#d3c4a9]', 'text-[#2b1f18]');
+                
+                btnTrad.classList.remove('bg-[#2b1f18]', 'text-[#f4eadd]');
+                btnTrad.classList.add('text-[#2b1f18]', 'hover:bg-[#d3c4a9]');
+
+                viewTrad.classList.add('hidden');
+                viewCobot.classList.remove('hidden');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            showConfig('cartesian');
+        });
+
+    </script>
+</body>
+</html>
